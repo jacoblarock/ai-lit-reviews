@@ -1,0 +1,11 @@
+You are tasked with writing a comprehensive literature review for the following topic: TOPIC
+In order to write the review, you first need to search an academic database for articles that are relevant to the topic.
+The searches should be short and based on *single* keywords and not keyphrases separated by either AND or OR, following the following format for the search keywords: "all:{term1} AND all:{term2} ... "
+Return several possible search queries as a list with the following format:
+[
+    "query1",
+    "query2",
+    "query3" 
+    ...
+]
+Provide no answer other than the requested object.
