@@ -1,0 +1,6 @@
+You are tasked with writing a literature review on the following topic: TOPIC
+The abstracts of the articles selected for review are contained in the following list: ABSTRACTS
+The results section of the paper will contain multiple sections, each containing a category of articles based on their content.
+Consider and determine two to four appropriate categories for the literature to be contained within the results section of the paper.
+Return the results as a list in the following format ["category 1", "category 2" ...]
+return nothing but the list.

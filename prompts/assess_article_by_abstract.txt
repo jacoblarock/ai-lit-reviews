@@ -1,0 +1,6 @@
+You are tasked with writing a literature review on the following topic: TOPIC
+You must now determine if an article fits the topic or not based on the title and abstract.
+Title: TITLE
+Abstract: ABSTRACT
+Consider the article contents carefully.
+Return either yes or no and no other answer.
