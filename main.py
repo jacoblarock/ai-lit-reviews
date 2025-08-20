@@ -3,6 +3,8 @@ import xmltodict
 import ollama
 import json
 from arxiv import Client, Search, Result
+import pickle
+import os
 
 model = "qwen3:14b"
 
@@ -84,9 +86,9 @@ def write_articles_to_file(articles: list[Result], filename: str) -> None:
             f.write(f"{article.summary}\n")
             f.write("-" * 80 + "\n\n")
 
-def determine_article_categories(approved_articles: list[Result], topic: str) -> list[str]:
+def determine_article_categories(approved_articles: list[Result], topic: str) -> dict[str,list]:
     print("Determing article categories")
-    abstracts = [article.summary for article in approved_articles]
+    abstracts = [(i, article.summary) for i, article in enumerate(approved_articles)]
     with open("prompts/determine_article_categories.txt", encoding="utf-8") as file:
         prompt = file.read().replace("TOPIC", topic).replace("ABSTRACTS", json.dumps(abstracts))
     while True:
@@ -99,8 +101,8 @@ def determine_article_categories(approved_articles: list[Result], topic: str) ->
         )
         try:
             content = resp["message"]["content"]
-            start_index = content.rfind("[")
-            end_index = content.rfind("]") + 1
+            start_index = content.rfind("{")
+            end_index = content.rfind("}") + 1
             content = content[start_index:end_index]
             return json.loads(content)
         except:
@@ -108,27 +110,48 @@ def determine_article_categories(approved_articles: list[Result], topic: str) ->
 
 def main():
     topic = "Explainable AI in the area of audio deepfake detection."
-    article_metadata = []
     used_queries = []
-    while len(article_metadata) < 50:
-        queries = create_queries(topic)
-        article_metadata += query_articles(queries, article_metadata)
+    if not os.path.isfile("temp/article_metadata.pkl") or not os.path.isfile("temp/queries.pkl"):
+        article_metadata = []
+        while len(article_metadata) < 50:
+            queries = create_queries(topic)
+            used_queries += queries
+            article_metadata += query_articles(queries, article_metadata)
+            print(len(article_metadata))
         article_metadata = deduplicate_results(article_metadata)
         print(len(article_metadata))
-    print(len(article_metadata))
-    abstract_filtered = []
-    for article in article_metadata:
-        article_res = assess_article_by_abstract(article, topic)
-        if article_res:
-            abstract_filtered.append(article)
-            print(article.title)
-            print("article approved")
-            abstract_filtered.append(article)
-        else:
-            print(article.title)
-            print("article filtered out")
-    write_articles_to_file(abstract_filtered, "articles.txt")
-    categories = determine_article_categories(abstract_filtered, topic)
+        with open("temp/article_metadata.pkl", "wb") as file:
+            pickle.dump(article_metadata, file)
+        with open("temp/queries.pkl", "wb") as file:
+            pickle.dump(used_queries, file)
+    else:
+        with open("temp/article_metadata.pkl", "rb") as file:
+            article_metadata = pickle.load(file)
+        with open("temp/queries.pkl", "rb") as file:
+            used_queries = pickle.load(file)
+    if not os.path.isfile("temp/abstract_filtered.pkl"):
+        abstract_filtered = []
+        for article in article_metadata:
+            article_res = assess_article_by_abstract(article, topic)
+            if article_res:
+                print(article.title)
+                print("article approved")
+                abstract_filtered.append(article)
+            else:
+                print(article.title)
+                print("article filtered out")
+        with open("temp/abstract_filtered.pkl", "wb") as file:
+            pickle.dump(abstract_filtered, file)
+    else:
+        with open("temp/abstract_filtered.pkl", "rb") as file:
+            abstract_filtered = pickle.load(file)
+    if not os.path.isfile("temp/article_categories.pkl"):
+        categories = determine_article_categories(abstract_filtered, topic)
+        with open("temp/article_categories.pkl", "wb") as file:
+            pickle.dump(categories, file)
+    else:
+        with open("temp/article_categories.pkl", "rb") as file:
+            categories = pickle.load(file)
     print(categories)
 
 if __name__ == "__main__":

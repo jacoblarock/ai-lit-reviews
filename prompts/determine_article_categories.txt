@@ -1,6 +1,7 @@
 You are tasked with writing a literature review on the following topic: TOPIC
-The abstracts of the articles selected for review are contained in the following list: ABSTRACTS
+The abstracts of the articles selected for review are contained in the following enumerated list: ABSTRACTS
 The results section of the paper will contain multiple sections, each containing a category of articles based on their content.
 Consider and determine two to four appropriate categories for the literature to be contained within the results section of the paper.
-Return the results as a list in the following format ["category 1", "category 2" ...]
-return nothing but the list.
+For each category, consider which articles from the provided list belong in the category.
+Return the results as a json object in the following format {"category 1": [1, 2, 3 ...], "category 2": [4, 5, 6 ...] ...}
+return nothing but the json object. Ensure that every article appears at least once in the object.
