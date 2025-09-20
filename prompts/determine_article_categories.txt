@@ -4,4 +4,5 @@ The results section of the paper will contain multiple sections, each containing
 Consider and determine two to four appropriate categories for the literature to be contained within the results section of the paper.
 For each category, consider which articles from the provided list belong in the category.
 Return the results as a json object in the following format {"category 1": [1, 2, 3 ...], "category 2": [4, 5, 6 ...] ...}
+Ensure the categories are such that they contain at least two articles.
 return nothing but the json object. Ensure that every article appears at least once in the object.

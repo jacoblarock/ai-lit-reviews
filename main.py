@@ -5,6 +5,8 @@ import json
 from arxiv import Client, Search, Result
 import pickle
 import os
+from bs4 import BeautifulSoup
+import sys
 
 model = "qwen3:14b"
 
@@ -108,6 +110,41 @@ def determine_article_categories(approved_articles: list[Result], topic: str) ->
         except:
             print("retrying")
 
+def prepare_subsection_articles(abstract_filtered: list[Result], subsection_contains: list[int]) -> dict[int,Result]:
+    subsection_articles: dict[int,Result] = {}
+    for i in subsection_contains:
+        subsection_articles[i] = abstract_filtered[i]
+    return subsection_articles
+
+def summarize_article(article_contents: str, topic: str, section_name: str):
+    with open("prompts/summarize_article.txt", encoding="utf-8") as file:
+        prompt = file.read().replace("TOPIC", topic).replace("SECTION", section_name).replace("ARTICLE", article_contents)
+    resp = ollama.chat(
+        model=model,
+        messages=[{
+            "role": "user",
+            "content": prompt
+        }]
+    )
+    c = resp["message"]["content"]
+    return c[c.find("</think>")+8:]
+
+def make_subsection_summaries(subsection_articles: dict[int,Result], topic: str, section_name: str) -> dict[int,str]:
+    print("making summaries for subsection: " + section_name)
+    article_summaries = {}
+    for i in subsection_articles.keys():
+        article = subsection_articles[i]
+        short_id = article.get_short_id()
+        article_contents_raw = requests.get(
+            f"https://arxiv.org/html/{short_id}"
+        ).content
+        soup = BeautifulSoup(article_contents_raw, features="html.parser")
+        article_elements = soup.find_all("p", {"class": "ltx_p"})
+        if article_elements:
+            article_contents ="\n".join([str(e) for e in article_elements])
+        article_summaries[i] = summarize_article(article_contents, topic, section_name)
+    return article_summaries
+
 def main():
     topic = "Explainable AI in the area of audio deepfake detection."
     used_queries = []
@@ -144,7 +181,7 @@ def main():
             pickle.dump(abstract_filtered, file)
     else:
         with open("temp/abstract_filtered.pkl", "rb") as file:
-            abstract_filtered = pickle.load(file)
+            abstract_filtered: list[Result] = pickle.load(file)
     if not os.path.isfile("temp/article_categories.pkl"):
         categories = determine_article_categories(abstract_filtered, topic)
         with open("temp/article_categories.pkl", "wb") as file:
@@ -153,6 +190,11 @@ def main():
         with open("temp/article_categories.pkl", "rb") as file:
             categories = pickle.load(file)
     print(categories)
+    for i, category in enumerate(categories.keys()):
+        subsection_articles = prepare_subsection_articles(abstract_filtered, categories[category])
+        subsection_summaries = make_subsection_summaries(subsection_articles, topic, category)
+        print(subsection_summaries)
+        sys.exit()
 
 if __name__ == "__main__":
     main()
