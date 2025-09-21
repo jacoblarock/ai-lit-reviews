@@ -9,6 +9,7 @@ Currently, the following steps are implemented or planned:
 - Contextual article summarization as preprocessing before the results section.
 - Segmented generation of the results section using the previous steps as context.
 - Evaluation of potential subsections for the discussion section.
-- Segmented generation of the discussion subsections.
+- Segmented generation of the discussion subsections, analog to the results categorization.
 - With the discussion as context, the extrapolation of a conclusion.
+
 The use of locally hosted LLMs is made possible with the Ollama library.
