@@ -109,6 +109,23 @@ def determine_article_categories(approved_articles: list[Result], topic: str) ->
         except:
             print("retrying")
 
+def make_methods_section(used_queries: list[str], abstract_filtered: list[Result], topic: str) -> str:
+    article_titles = [x.title for x in abstract_filtered]
+    with open("prompts/make_methods_section.txt", "r", encoding="utf-8") as file:
+        prompt = file.read()\
+            .replace("QUERIES", str(used_queries))\
+            .replace("TITLES", str(article_titles))\
+            .replace("TOPIC", topic)
+    resp = ollama.chat(
+        model=model,
+        messages=[{
+            "role": "user",
+            "content": prompt
+        }],
+    )
+    c = resp["message"]["content"]
+    return c[c.find("</think>")+8:]
+
 def prepare_subsection_articles(abstract_filtered: list[Result], subsection_contains: list[int]) -> dict[int,Result]:
     subsection_articles: dict[int,Result] = {}
     for i in subsection_contains:
@@ -187,6 +204,15 @@ def main():
     else:
         with open("temp/abstract_filtered.pkl", "rb") as file:
             abstract_filtered: list[Result] = pickle.load(file)
+    # generate the methods section based on previous results
+    if not os.path.isfile("temp/methods.txt"):
+        methods = make_methods_section(used_queries, abstract_filtered, topic)
+        with open("temp/methods.txt", "w", encoding="utf-8") as file:
+            file.write(methods)
+    else:
+        with open("temp/methods.txt", "r", encoding="utf-8") as file:
+            methods = file.read()
+    print(methods)
     # categorize the articles into subsections of the results section
     if not os.path.isfile("temp/article_categories.pkl"):
         categories = determine_article_categories(abstract_filtered, topic)

@@ -1,0 +1,13 @@
+Observe the following article titles {
+    TITLES
+}
+Observe the following search queries {
+    QUERIES
+}
+You are tasked with writing the methods section of a literature review for the topic "TOPIC"
+The methods section should describe how articles were found as well as how they were filtered.
+The articles were searched within the ArXiv database.
+The articles were filtered based on their titles and abstract sections.
+Use the article titles provided where appropriate, but do not directly reference the articles by title in the section.
+Use the given search queries for context when describing the search methodology.
+Format the section using valid latex formatting. Priortize sentences in paragraphs that flow together over itemized lists.
