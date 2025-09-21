@@ -1,5 +1,4 @@
 import requests
-import xmltodict
 import ollama
 import json
 from arxiv import Client, Search, Result
@@ -142,12 +141,17 @@ def make_subsection_summaries(subsection_articles: dict[int,Result], topic: str,
         article_elements = soup.find_all("p", {"class": "ltx_p"})
         if article_elements:
             article_contents ="\n".join([str(e) for e in article_elements])
+        if not article_elements:
+            print("skipping:", i)
+            continue
         article_summaries[i] = summarize_article(article_contents, topic, section_name)
+        print("summarized:", i)
     return article_summaries
 
 def main():
     topic = "Explainable AI in the area of audio deepfake detection."
     used_queries = []
+    # create queries and search for articles until there are at least 50 results for filtering
     if not os.path.isfile("temp/article_metadata.pkl") or not os.path.isfile("temp/queries.pkl"):
         article_metadata = []
         while len(article_metadata) < 50:
@@ -166,6 +170,7 @@ def main():
             article_metadata = pickle.load(file)
         with open("temp/queries.pkl", "rb") as file:
             used_queries = pickle.load(file)
+    # filter articles by the titles and abstracts for their relevance to the topic
     if not os.path.isfile("temp/abstract_filtered.pkl"):
         abstract_filtered = []
         for article in article_metadata:
@@ -182,6 +187,7 @@ def main():
     else:
         with open("temp/abstract_filtered.pkl", "rb") as file:
             abstract_filtered: list[Result] = pickle.load(file)
+    # categorize the articles into subsections of the results section
     if not os.path.isfile("temp/article_categories.pkl"):
         categories = determine_article_categories(abstract_filtered, topic)
         with open("temp/article_categories.pkl", "wb") as file:
@@ -190,11 +196,20 @@ def main():
         with open("temp/article_categories.pkl", "rb") as file:
             categories = pickle.load(file)
     print(categories)
+    # create summaries of articles to prepare for the results section
+    sections_subsections_summaries: dict[str,dict[int,str]] = {}
     for i, category in enumerate(categories.keys()):
-        subsection_articles = prepare_subsection_articles(abstract_filtered, categories[category])
-        subsection_summaries = make_subsection_summaries(subsection_articles, topic, category)
-        print(subsection_summaries)
-        sys.exit()
+        if not os.path.isfile(f"temp/subsection_summaries_{i}.pkl"):
+            subsection_articles = prepare_subsection_articles(abstract_filtered, categories[category])
+            subsection_summaries = make_subsection_summaries(subsection_articles, topic, category)
+            with open(f"temp/subsection_summaries_{i}.pkl", "wb") as file:
+                pickle.dump(subsection_summaries, file)
+        else:
+            with open(f"temp/subsection_summaries_{i}.pkl", "rb") as file:
+                subsection_summaries = pickle.load(file)
+        sections_subsections_summaries[category] = subsection_summaries
+        print(sections_subsections_summaries)
+
 
 if __name__ == "__main__":
     main()
