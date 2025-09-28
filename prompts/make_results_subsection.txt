@@ -1,0 +1,7 @@
+Observe the following summaries of articles SUMMARIES
+You are tasked with writing the results section for a literature review on the topic TOPIC
+You are tasked with writing the subsection 'SECTION' of the results section.
+Use the provided summaries to write the given subsection, providing information to each source given in the summaries.
+Write the subsection using valid Latex code.
+Reference the articles in the results section with their numbers using valid Latex syntax, for example: \cite{1}
+Make sure to include information about every article in the summaries and that the sentences flow together.

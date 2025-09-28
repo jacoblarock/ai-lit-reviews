@@ -165,6 +165,20 @@ def make_subsection_summaries(subsection_articles: dict[int,Result], topic: str,
         print("summarized:", i)
     return article_summaries
 
+def make_results_subsection(subsection_summaries: dict[int,str], topic: str, section_name: str) -> str:
+    print("making subsection:", section_name)
+    with open("prompts/make_results_subsection.txt", encoding="utf-8") as file:
+        prompt = file.read().replace("TOPIC", topic).replace("SECTION", section_name).replace("SUMMARIES", str(subsection_summaries))
+    resp = ollama.chat(
+        model=model,
+        messages=[{
+            "role": "user",
+            "content": prompt
+        }]
+    )
+    c = resp["message"]["content"]
+    return c[c.find("</think>")+8:]
+
 def main():
     topic = "Explainable AI in the area of audio deepfake detection."
     used_queries = []
@@ -235,6 +249,21 @@ def main():
                 subsection_summaries = pickle.load(file)
         sections_subsections_summaries[category] = subsection_summaries
         print(sections_subsections_summaries)
+    results_subsections: dict[str,str] = {}
+    for i, category in enumerate(categories.keys()):
+        if not os.path.isfile(f"temp/subsection_{i}.pkl"):
+            subsection_contents = make_results_subsection(
+                sections_subsections_summaries[category],
+                topic,
+                category
+            )
+            with open(f"temp/subsection_{i}.pkl", "wb") as file:
+                pickle.dump(subsection_summaries, file)
+        else:
+            with open(f"temp/subsection_{i}.pkl", "rb") as file:
+                subsection_contents = pickle.load(file)
+        results_subsections[category] = subsection_contents
+        print(results_subsections)
 
 
 if __name__ == "__main__":
