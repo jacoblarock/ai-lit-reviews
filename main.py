@@ -110,6 +110,7 @@ def determine_article_categories(approved_articles: list[Result], topic: str) ->
             print("retrying")
 
 def make_methods_section(used_queries: list[str], abstract_filtered: list[Result], topic: str) -> str:
+    print("making methods section")
     article_titles = [x.title for x in abstract_filtered]
     with open("prompts/make_methods_section.txt", "r", encoding="utf-8") as file:
         prompt = file.read()\
@@ -226,7 +227,6 @@ def main():
     else:
         with open("temp/methods.txt", "r", encoding="utf-8") as file:
             methods = file.read()
-    print(methods)
     # categorize the articles into subsections of the results section
     if not os.path.isfile("temp/article_categories.pkl"):
         categories = determine_article_categories(abstract_filtered, topic)
@@ -235,7 +235,6 @@ def main():
     else:
         with open("temp/article_categories.pkl", "rb") as file:
             categories = pickle.load(file)
-    print(categories)
     # create summaries of articles to prepare for the results section
     sections_subsections_summaries: dict[str,dict[int,str]] = {}
     for i, category in enumerate(categories.keys()):
@@ -248,7 +247,6 @@ def main():
             with open(f"temp/subsection_summaries_{i}.pkl", "rb") as file:
                 subsection_summaries = pickle.load(file)
         sections_subsections_summaries[category] = subsection_summaries
-        print(sections_subsections_summaries)
     results_subsections: dict[str,str] = {}
     for i, category in enumerate(categories.keys()):
         if not os.path.isfile(f"temp/subsection_{i}.pkl"):
@@ -257,13 +255,12 @@ def main():
                 topic,
                 category
             )
-            with open(f"temp/subsection_{i}.pkl", "wb") as file:
-                pickle.dump(subsection_contents, file)
+            with open(f"temp/subsection_{i}.txt", "w", encoding="utf-8") as file:
+                file.write(subsection_contents)
         else:
-            with open(f"temp/subsection_{i}.pkl", "rb") as file:
-                subsection_contents = pickle.load(file)
+            with open(f"temp/subsection_{i}.pkl", "r", encoding="utf-8") as file:
+                subsection_contents = file.read()
         results_subsections[category] = subsection_contents
-        print(results_subsections)
 
 
 if __name__ == "__main__":
