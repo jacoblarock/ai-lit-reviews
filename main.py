@@ -258,7 +258,7 @@ def main():
                 category
             )
             with open(f"temp/subsection_{i}.pkl", "wb") as file:
-                pickle.dump(subsection_summaries, file)
+                pickle.dump(subsection_contents, file)
         else:
             with open(f"temp/subsection_{i}.pkl", "rb") as file:
                 subsection_contents = pickle.load(file)
