@@ -180,6 +180,21 @@ def make_results_subsection(subsection_summaries: dict[int,str], topic: str, sec
     c = resp["message"]["content"]
     return c[c.find("</think>")+8:]
 
+def make_results_intro(results_subsections: dict[str,str], topic: str) -> str:
+    print("making results introduction")
+    joined_subsections = "\n".join(results_subsections.values())
+    with open("prompts/make_results_intro.txt", encoding="utf-8") as file:
+        prompt = file.read().replace("TOPIC", topic).replace("SUBSECTIONS", str(joined_subsections))
+    resp = ollama.chat(
+        model=model,
+        messages=[{
+            "role": "user",
+            "content": prompt
+        }]
+    )
+    c = resp["message"]["content"]
+    return c[c.find("</think>")+8:]
+
 def main():
     topic = "Explainable AI in the area of audio deepfake detection."
     used_queries = []
@@ -249,7 +264,7 @@ def main():
         sections_subsections_summaries[category] = subsection_summaries
     results_subsections: dict[str,str] = {}
     for i, category in enumerate(categories.keys()):
-        if not os.path.isfile(f"temp/subsection_{i}.pkl"):
+        if not os.path.isfile(f"temp/subsection_{i}.txt"):
             subsection_contents = make_results_subsection(
                 sections_subsections_summaries[category],
                 topic,
@@ -258,9 +273,16 @@ def main():
             with open(f"temp/subsection_{i}.txt", "w", encoding="utf-8") as file:
                 file.write(subsection_contents)
         else:
-            with open(f"temp/subsection_{i}.pkl", "r", encoding="utf-8") as file:
+            with open(f"temp/subsection_{i}.txt", "r", encoding="utf-8") as file:
                 subsection_contents = file.read()
         results_subsections[category] = subsection_contents
+    if not os.path.isfile(f"temp/results_intro.txt"):
+        results_intro = make_results_intro(results_subsections, topic)
+        with open(f"temp/results_intro.txt", "w", encoding="utf-8") as file:
+            file.write(results_intro)
+    else:
+        with open(f"temp/results_intro.txt", "r", encoding="utf-8") as file:
+            results_intro = file.read()
 
 
 if __name__ == "__main__":
