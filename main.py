@@ -6,6 +6,7 @@ import pickle
 import os
 from bs4 import BeautifulSoup
 import sys
+from latexcompiler import LC
 
 model = "qwen3:14b"
 
@@ -74,6 +75,33 @@ def assess_article_by_abstract(article: Result, topic: str) -> bool:
             return False
         print(answer)
         print("retrying")
+
+def generate_biblatex_entry(result: Result, key: str) -> str:
+    # Extract key components
+    eprint = result.entry_id.split('/')[-1]  # e.g., "2101.12345v1"
+    authors = ", ".join([a.name for a in result.authors])
+    try:
+        year = eprint.split('.')[0][:4]
+    except Exception:
+        year = "????"
+    entry = (
+        f"@article{{{key},\n"
+        f"  title = {{{result.title}}},\n"
+        f"  author = {{{authors}}},\n"
+        f"  eprint = {{{eprint}}},\n"
+        f"  eprinttype = {{arxiv}},\n"
+        f"  year = {{{year}}},\n"
+        f"  doi = {{{result.doi}}}\n"
+        f"}}"
+    )
+    return entry
+
+def create_bibliography(sources: list[Result]) -> str:
+    out = ""
+    for i, res in enumerate(sources):
+        out += generate_biblatex_entry(res, str(i))
+        out += "\n"
+    return out
 
 def write_articles_to_file(articles: list[Result], filename: str) -> None:
     with open(filename, "w", encoding="utf-8") as f:
@@ -195,8 +223,30 @@ def make_results_intro(results_subsections: dict[str,str], topic: str) -> str:
     c = resp["message"]["content"]
     return c[c.find("</think>")+8:]
 
+def compile(sections: list[str], title: str, author: str):
+    with open("templates/main.tex", "r", encoding="utf-8") as file:
+        template = file.read()
+    out = template
+    out = out.replace("TITLE", title)
+    out = out.replace("AUTHOR", author)
+    out = out.replace("SECTIONS", "\n".join(sections))
+    if not os.path.isdir("temp/result/"):
+        os.mkdir("temp/result/")
+    with open("temp/result/main.tex", "w", encoding="utf-8") as file:
+        file.write(out)
+    os.chdir("temp/result/")
+    LC.compile_document(
+        tex_engine="pdflatex",
+        bib_engine="bibtex",
+        no_bib=True,
+        path="main.tex",
+        folder_name="compile"
+    )
+
 def main():
     topic = "Explainable AI in the area of audio deepfake detection."
+    if not os.path.isdir("temp/"):
+        os.mkdir("temp/")
     used_queries = []
     # create queries and search for articles until there are at least 50 results for filtering
     if not os.path.isfile("temp/article_metadata.pkl") or not os.path.isfile("temp/queries.pkl"):
@@ -234,6 +284,13 @@ def main():
     else:
         with open("temp/abstract_filtered.pkl", "rb") as file:
             abstract_filtered: list[Result] = pickle.load(file)
+    if not os.path.isfile("temp/citations.bib"):
+        with open("temp/citations.bib", "w", encoding="utf-8") as file:
+            bibliography = create_bibliography(abstract_filtered)
+            file.write(bibliography)
+    else:
+        with open("temp/citations.bib", "r", encoding="utf-8") as file:
+            bibliography = file.read()
     # generate the methods section based on previous results
     if not os.path.isfile("temp/methods.txt"):
         methods = make_methods_section(used_queries, abstract_filtered, topic)
@@ -283,6 +340,17 @@ def main():
     else:
         with open(f"temp/results_intro.txt", "r", encoding="utf-8") as file:
             results_intro = file.read()
+    document_sections = [
+        methods,
+        results_intro
+    ] + [
+        x for x in results_subsections.values()
+    ]
+    compile(
+        document_sections,
+        topic,
+        "Bot"
+    )
 
 
 if __name__ == "__main__":
