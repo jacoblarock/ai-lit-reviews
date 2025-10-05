@@ -7,4 +7,4 @@ The introduction should be concise, but formal and flow into the rest of the sub
 It should not yet delve into specific article content, but provide a short overview of what the reader can expect as he reads further into the section.
 The overall topic of the review is the following "TOPIC"
 Write the subsection using valid Latex code.
-Begin the subsection with a valid \subsection{} command.
+Begin the subsection with a valid \section{} command.
