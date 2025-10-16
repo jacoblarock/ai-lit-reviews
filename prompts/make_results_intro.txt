@@ -6,5 +6,5 @@ The intention is to place the introduction at the beginning of the results secti
 The introduction should be concise, but formal and flow into the rest of the subsections.
 It should not yet delve into specific article content, but provide a short overview of what the reader can expect as he reads further into the section.
 The overall topic of the review is the following "TOPIC"
-Write the subsection using valid Latex code.
+Write the subsection using valid Latex code, avoiding markdown formatting.
 Begin the subsection with a valid \section{} command.

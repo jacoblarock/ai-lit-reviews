@@ -10,5 +10,6 @@ The articles were searched within the ArXiv database.
 The articles were filtered based on their titles and abstract sections.
 Use the article titles provided where appropriate, but do not directly reference the articles by title in the section.
 Use the given search queries for context when describing the search methodology.
-Format the section using valid latex formatting. Priortize sentences in paragraphs that flow together over itemized lists.
+Format the section using valid latex formatting, avoiding markdown formatting.
+Priortize sentences in paragraphs that flow together over itemized lists.
 Begin the section with a valid \section{} command. Make subsections if necessary.

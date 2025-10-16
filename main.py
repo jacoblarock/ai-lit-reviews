@@ -4,6 +4,7 @@ import json
 from arxiv import Client, Search, Result
 import pickle
 import os
+import shutil
 from bs4 import BeautifulSoup
 import sys
 from latexcompiler import LC
@@ -234,6 +235,7 @@ def compile(sections: list[str], title: str, author: str):
         os.mkdir("temp/result/")
     with open("temp/result/main.tex", "w", encoding="utf-8") as file:
         file.write(out)
+    shutil.copyfile("temp/citations.bib", "temp/result/citations.bib")
     os.chdir("temp/result/")
     LC.compile_document(
         tex_engine="pdflatex",

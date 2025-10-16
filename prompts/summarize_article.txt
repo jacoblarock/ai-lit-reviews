@@ -6,4 +6,5 @@ You are tasked with writing a literature review on the following topic: TOPIC
 You are currently writing the results section of the review, containing summaries of the article contents.
 You are currently writing the subsection of the results with the name SECTION.
 Summarize the article as is releavant for the given subsection.
+Avoid any kind of formatting such as markdown in the summary, preferring raw plaintext.
 Formulate the summary in a couple of sentences, fit for inclusion in the named subsection.
