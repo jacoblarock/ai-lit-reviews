@@ -1,0 +1,7 @@
+Observe the following results section of a literature review RESULTS
+You are tasked with writing the discussion section for a literature review on the topic TOPIC
+You are tasked with writing the subsection 'limitations' of the discussion section.
+Use the context of the results section to identify overall limitations in the research, i.e. topics that have yet to be addressed.
+Write the subsection using valid Latex code, avoiding markdown formatting.
+If you reference an article in the creation of the section, reference the article using valid Latex syntax, for example: \cite{1}
+Begin the subsection with a valid \subsection{} command.

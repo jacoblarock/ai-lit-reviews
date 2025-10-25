@@ -224,6 +224,23 @@ def make_results_intro(results_subsections: dict[str,str], topic: str) -> str:
     c = resp["message"]["content"]
     return c[c.find("</think>")+8:]
 
+def make_discussion_limitations(results_intro: str, results_subsections: dict[str,str], topic: str) -> str:
+    results_section = "\n".join(
+        [results_intro] + [x for x in results_subsections.values()]
+    )
+    with open("prompts/discussion_limitations.txt", encoding="utf-8") as file:
+        prompt = file.read().replace("RESULTS", results_section).replace("TOPIC", str(topic))
+    resp = ollama.chat(
+        model=model,
+        messages=[{
+            "role": "user",
+            "content": prompt
+        }]
+    )
+    c = resp["message"]["content"]
+    print(c)
+    return c[c.find("</think>")+8:]
+
 def compile(sections: list[str], title: str, author: str):
     with open("templates/main.tex", "r", encoding="utf-8") as file:
         template = file.read()
@@ -342,6 +359,13 @@ def main():
     else:
         with open(f"temp/results_intro.txt", "r", encoding="utf-8") as file:
             results_intro = file.read()
+    if not os.path.isfile(f"temp/discussion_limitations.txt"):
+        discussion_limitations = make_discussion_limitations(results_intro, results_subsections, topic)
+        with open(f"temp/discussion_limitations.txt", "w", encoding="utf-8") as file:
+            file.write(discussion_limitations)
+    else:
+        with open(f"temp/discussion_limitations.txt", "r", encoding="utf-8") as file:
+            discussion_limitations = file.read()
     document_sections = [
         methods,
         results_intro
