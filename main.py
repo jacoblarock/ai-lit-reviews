@@ -225,6 +225,7 @@ def make_results_intro(results_subsections: dict[str,str], topic: str) -> str:
     return c[c.find("</think>")+8:]
 
 def make_discussion_limitations(results_intro: str, results_subsections: dict[str,str], topic: str) -> str:
+    print("discussion limitations")
     results_section = "\n".join(
         [results_intro] + [x for x in results_subsections.values()]
     )
@@ -238,8 +239,40 @@ def make_discussion_limitations(results_intro: str, results_subsections: dict[st
         }]
     )
     c = resp["message"]["content"]
-    print(c)
     return c[c.find("</think>")+8:]
+
+def make_discussion_future_directions(results_intro: str, results_subsections: dict[str,str], topic: str) -> str:
+    print("discussion future directions")
+    results_section = "\n".join(
+        [results_intro] + [x for x in results_subsections.values()]
+    )
+    with open("prompts/discussion_future_directions.txt", encoding="utf-8") as file:
+        prompt = file.read().replace("RESULTS", results_section).replace("TOPIC", str(topic))
+    resp = ollama.chat(
+        model=model,
+        messages=[{
+            "role": "user",
+            "content": prompt
+        }]
+    )
+    c = resp["message"]["content"]
+    return c[c.find("</think>")+8:]
+
+def make_discussion_intro(discussion_subsections: list[str], topic: str) -> str:
+    print("making discussion introduction")
+    joined_subsections = "\n".join(discussion_subsections)
+    with open("prompts/make_discussion_intro.txt", encoding="utf-8") as file:
+        prompt = file.read().replace("TOPIC", topic).replace("SUBSECTIONS", str(joined_subsections))
+    resp = ollama.chat(
+        model=model,
+        messages=[{
+            "role": "user",
+            "content": prompt
+        }]
+    )
+    c = resp["message"]["content"]
+    return c[c.find("</think>")+8:]
+
 
 def compile(sections: list[str], title: str, author: str):
     with open("templates/main.tex", "r", encoding="utf-8") as file:
@@ -366,11 +399,29 @@ def main():
     else:
         with open(f"temp/discussion_limitations.txt", "r", encoding="utf-8") as file:
             discussion_limitations = file.read()
+    if not os.path.isfile(f"temp/discussion_future_directions.txt"):
+        discussion_future_directions = make_discussion_future_directions(results_intro, results_subsections, topic)
+        with open(f"temp/discussion_future_directions.txt", "w", encoding="utf-8") as file:
+            file.write(discussion_future_directions)
+    else:
+        with open(f"temp/discussion_future_directions.txt", "r", encoding="utf-8") as file:
+            discussion_future_directions = file.read()
+    if not os.path.isfile(f"temp/discussion_intro.txt"):
+        discussion_intro = make_discussion_intro([discussion_limitations, discussion_future_directions], topic)
+        with open(f"temp/discussion_intro.txt", "w", encoding="utf-8") as file:
+            file.write(discussion_intro)
+    else:
+        with open(f"temp/results_intro.txt", "r", encoding="utf-8") as file:
+            results_intro = file.read()
     document_sections = [
         methods,
         results_intro
     ] + [
         x for x in results_subsections.values()
+    ] + [
+        discussion_intro,
+        discussion_limitations,
+        discussion_future_directions,
     ]
     compile(
         document_sections,
