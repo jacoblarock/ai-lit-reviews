@@ -79,8 +79,9 @@ def assess_article_by_abstract(article: Result, topic: str) -> bool:
 
 def generate_biblatex_entry(result: Result, key: str) -> str:
     # Extract key components
-    eprint = result.entry_id.split('/')[-1]  # e.g., "2101.12345v1"
-    authors = ", ".join([a.name for a in result.authors])
+    eprint = result.entry_id.split('/')[-1]
+    # authors = ", ".join([a.name for a in result.authors])
+    authors = f"{result.authors[0]} et al."
     try:
         year = eprint.split('.')[0][:4]
     except Exception:
@@ -411,8 +412,8 @@ def main():
         with open(f"temp/discussion_intro.txt", "w", encoding="utf-8") as file:
             file.write(discussion_intro)
     else:
-        with open(f"temp/results_intro.txt", "r", encoding="utf-8") as file:
-            results_intro = file.read()
+        with open(f"temp/discussion_intro.txt", "r", encoding="utf-8") as file:
+            discussion_intro = file.read()
     document_sections = [
         methods,
         results_intro
